@@ -17,3 +17,5 @@ TMscore
 *.log
 
 *.pdb
+
+*.ckpt
