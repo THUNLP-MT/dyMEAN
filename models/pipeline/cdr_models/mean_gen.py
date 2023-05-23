@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from data import EquiAACDataset
+from data.dataset import EquiAACDataset
 from generate import set_cdr
 
 

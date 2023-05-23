@@ -14,7 +14,6 @@ This repo contains the codes for our paper [End-to-End Full-Atom Antibody Design
 - [Proof-of-Concept Applications](#proof-of-concept-applications)
     - [Inference API](#inference-api)
     - [*In Silico* "Display"](#in-silico-display)
-    - [Optimization](#optimization)
 - [Contact](#contact)
 - [Others](#others)
 
@@ -46,7 +45,14 @@ The lDDT scorer is in the conda environment, and the $\Delta\Delta G$ scorer is 
 
 **3. PDB data**
 
-Please download all the structure data of antibodies from the [download page of SAbDab](http://opig.stats.ox.ac.uk/webapps/newsabdab/sabdab/search/?all=true). Please enter the *Downloads* tab on the left of the web page and download the archived zip file for the structures, then decompress it. Then you should get a folder named *all_structures* with the following hierarchy:
+Please download all the structure data of antibodies from the [download page of SAbDab](http://opig.stats.ox.ac.uk/webapps/newsabdab/sabdab/search/?all=true). Please enter the *Downloads* tab on the left of the web page and download the archived zip file for the structures, then decompress it:
+
+```bash
+wget https://opig.stats.ox.ac.uk/webapps/newsabdab/sabdab/archive/all/ -O all_structures.zip
+unzip all_structures.zip
+```
+
+You should get a folder named *all_structures* with the following hierarchy:
 
 ```
 ├── all_structures
@@ -77,26 +83,26 @@ If you are interested in the pipeline baselines, including the following project
 
 ## Experiments
 
-The trained checkpoints for each task are provided at the github release. To use them, please download the ones you are interested in into the folder *./checkpoints*:
+The trained checkpoints for each task are provided at the github release. To use them, please download the ones you are interested in into the folder `./checkpoints`:
 
-- *cdrh3_design.ckpt*: Epitope-binding CDR-H3 design.
-- *struct_prediction.ckpt*: Complex structure prediction.
-- *affinity_opt.ckpt* and *ddg_predictor.ckpt*: Affinity optimization.
+- `cdrh3_design.ckpt`: Epitope-binding CDR-H3 design.
+- `struct_prediction.ckpt`: Complex structure prediction.
+- `affinity_opt.ckpt` and `ddg_predictor.ckpt`: Affinity optimization.
 
 ### Data Preprocessing
 
 **Data**
 
-To preprocess the raw data, we need to first generate summaries for each benchmark in json format, then split the datasets into train/validation/test sets, and finally transform the pdb data to python objects. We have provided the script for all these procedures in *scripts/data_preprocess.sh*. Suppose the IMGT-renumbered pdb data are located at *all_structures/imgt/*, and that you want to store the processed data (~5G) at *all_data*, you can simply run:
+To preprocess the raw data, we need to first generate summaries for each benchmark in json format, then split the datasets into train/validation/test sets, and finally transform the pdb data to python objects. We have provided the script for all these procedures in `scripts/data_preprocess.sh`. Suppose the IMGT-renumbered pdb data are located at `all_structures/imgt/`, and that you want to store the processed data (~5G) at `all_data`, you can simply run:
 
 ```bash
 bash scripts/data_preprocess.sh all_structures/imgt all_data
 ```
-which takes about 1 hour to process SAbDab, RAbD, Igfold test set, and SKEMPI V2.0.
+which takes about 1 hour to process SAbDab, RAbD, Igfold test set, and SKEMPI V2.0. It is normal to see reported errors in this process because some antibody structures are wrongly annotated or have wrong format, which will be dropped out in the data cleaning phase.
 
 **(Optional) Conserved Template**
 
-We have provided the conserved template from SAbDab in *./data/template.json*. If you are interested in the extracting process, it is also possible to extract a conserved template from a specified dataset (e.g. the training set for the CDR-H3 design task) by running the following command:
+We have provided the conserved template from SAbDab in `./data/template.json`. If you are interested in the extracting process, it is also possible to extract a conserved template from a specified dataset (e.g. the training set for the CDR-H3 design task) by running the following command:
 
 ```bash
 python -m data.framework_templates \
@@ -112,7 +118,7 @@ GPU=0,1 bash scripts/train/train.sh scripts/train/configs/cdr_design.json
 ```
 Normally the training procedure takes about 7 hours on 2 GeForce RTX 2080 Ti GPUs. We have also provided the trained checkpoint at `checkpoints/cdrh3_design.ckpt`. Then please revise the path to the test set in `scripts/test/test.sh` and run the following command for testing:
 ```bash
-GPU=0 bash scripts/test/test.sh ./checkpoints/cdrh3_design.ckpt ./results
+GPU=0 bash scripts/test/test.sh ./checkpoints/cdrh3_design.ckpt ./all_data/RAbD/test.json ./results
 ```
 which will save the generated results to `./results`.
 
@@ -124,42 +130,42 @@ GPU=0,1 bash scripts/train/train.sh scripts/train/configs/struct_prediction.json
 ```
 Normally the training procedure takes about 8 hours on 2 GeForce RTX 2080 Ti GPUs. We have also provided the trained checkpoint at `checkpoints/struct_prediction.ckpt`. Then please run the following command for testing:
 ```bash
-GPU=0 bash scripts/test/test.sh ./checkpoints/struct_prediction.ckpt ./results
+GPU=0 bash scripts/test/test.sh ./checkpoints/struct_prediction.ckpt ./all_data/IgFold/test.json ./results
 ```
 
 ### Affinity Optimization
 We use SAbDab for training and the antibodies in SKEMPI V2.0 for testing. Similarly, please first revise the settings in `scripts/train/configs/affinity_opt.json`, `scripts/test/optimize_test.sh`, and additionally `scripts/train/train_predictor.sh`. Then please conduct training of dyMEANOpt (~ 5h):
 ```bash
-GPU=0,1 bash scripts/train/train.sh scripts/train/configs/affinity_opt.json
+GPU=0,1 bash scripts/train/train.sh scripts/train/configs/cdrh3_opt.json
 ```
 Then we need to train a predictor of ddg on the representations of generated complex (~ 40min):
 ```bash
-GPU=0 bash scripts/train/train_predictor.sh checkpoints/affinity_opt.ckpt
+GPU=0 bash scripts/train/train_predictor.sh checkpoints/cdrh3_opt.ckpt
 ```
-We have provided the trained checkpoints at `checkpoints/affinity_opt.ckpt` and `checkpoints/ddg_predictor.ckpt`. The optimization test can be conducted through:
+We have provided the trained checkpoints at `checkpoints/cdrh3_opt.ckpt` and `checkpoints/cdrh3_ddg_predictor.ckpt`. The optimization test can be conducted through:
 ```bash
-GPU=0 bash scripts/test/optimize_test.sh checkpoints/affinity_opt.ckpt checkpoints/ddg_predictor.ckpt 0 50
+GPU=0 bash scripts/test/optimize_test.sh checkpoints/cdrh3_opt.ckpt checkpoints/cdrh3_ddg_predictor.ckpt ./all_data/SKEMPI/test.json 0 50
 ```
 which will do 50 steps of gradient search without restrictions on the maximum number of changed residues (change 0 to any number to restrict the upperbound of $\Delta L$).
 
 
 ## Proof-of-Concept Applications
 
-We also provide inference API and *in silico* demos for common applications in the real world problems, which are located in the *./api* and *./demos*.
+We also provide inference API and *in silico* demos for common applications in the real world problems, which are located in the `./api` and `./demos`.
 
 ### Inference API
 
-We provide the **design** API and the **optimize** API in *./api*, which can be easily integrated into python codes.
+We provide the **design** API and the **optimize** API in `./api`, which can be easily integrated into python codes.
 
 #### Design
 
-The **design** API (*./api/design.py*) can be used to generate CDRs given the sequences of the framework region, the PDB file of the antigen as well as the epitope definitions. We will use the an interesting scenario to illustrate the usage of the **design** API.
+The **design** API (`./api/design.py`) can be used to generate CDRs given the sequences of the framework region, the PDB file of the antigen as well as the epitope definitions. We will use the an interesting scenario to illustrate the usage of the **design** API.
 
 We want to design an antibody combining to the open state of the transient receptor potential cation channel subfamily V member 1 (TRPV1), which plays a critical role in acute and persistent pain. Instead of handcraft the epitope on TRPV1, we try to mimic an existing binder which is a double-knot toxin (DkTx). Therefore, we need to first extract the epitope definition by analyzing the binding pattern of the toxin, then design an antibody with given sequences of the framework regions.
 
 **1. Extract the Epitope Definition**
 
-We provide the PDB file of the complex of the transient receptor potential cation channel subfamily V member 1 (TRPV1, chain ABCD) and the double-knot toxin (DkTx, chain EF) in *./demos/data/7l2m.pdb*. The original PDB has 4 symmetric units, so we manually split the two toxins (chain EF) in the middle to form 4 symmetric chains e,f,E,F. Each antibody only need to focus on one unit. Here we choose the chain E as an example.
+We provide the PDB file of the complex of the transient receptor potential cation channel subfamily V member 1 (TRPV1, chain ABCD) and the double-knot toxin (DkTx, chain EF) in `./demos/data/7l2m.pdb`. The original PDB has 4 symmetric units, so we manually split the two toxins (chain EF) in the middle to form 4 symmetric chains e,f,E,F. Each antibody only need to focus on one unit. Here we choose the chain E as an example.
 
 We generate the epitope definition by analyzing the binding interface of chain E to the TRPV1:
 
@@ -171,7 +177,7 @@ python -m api.binding_interface \
     --out ./demos/data/E_epitope.json
 ```
 
-Now the epitope definition (i.e. the residues of TRPV1 on the binding interface) is saved to *./demos/data/E_epitope.json*. By changing the value of the argument "ligand" to e, f, and F, we can obtain the epitope definitions for other units (don't forget to revise the output path as well).
+Now the epitope definition (i.e. the residues of TRPV1 on the binding interface) is saved to `./demos/data/E_epitope.json`. By changing the value of the argument "ligand" to e, f, and F, we can obtain the epitope definitions for other units (don't forget to revise the output path as well).
 
 **2. Obtain the Sequences of the Framework Regions**
 
@@ -220,7 +226,7 @@ design(ckpt=ckpt,  # path to the checkpoint of the trained model
        auto_detect_cdrs=False)  # manually use '-'  to represent CDR residues
 ```
 
-These codes are also added as an example in *./api/design.py*, so you can directly run it by:
+These codes are also added as an example in `./api/design.py`, so you can directly run it by:
 
 ```bash
 python -m api.design
@@ -232,14 +238,14 @@ Enabling Openmm relax will slow down the generation process a lot, but will rect
 
 #### Optimize
 
-The **optimize** API (*./api/optimize.py*) is straight-forward. We optimize *./demos/data/1nca.pdb* as an example:
+The **optimize** API (`./api/optimize.py`) is straight-forward. We optimize `./demos/data/1nca.pdb` as an example:
 
 ```python
 
 from api.optimize import optimize, ComplexSummary
 
-ckpt = './checkpoints/affinity_opt.ckpt'
-predictor_ckpt = './checkpoints/ddg_predictor.ckpt'
+ckpt = './checkpoints/cdrh3_opt.ckpt'
+predictor_ckpt = './checkpoints/cdrh3_ddg_predictor.ckpt'
 root_dir = './demos/data/1nca_opt'
 summary = ComplexSummary(
     pdb='./demos/data/1nca.pdb',
@@ -260,7 +266,7 @@ optimize(
 )
 ```
 
-Codes for this example is also added to *./api/optimize.py*, so you can directly run them by:
+Codes for this example is also added to `./api/optimize.py`, so you can directly run them by:
 
 ```bash
 python -m api.optimize
@@ -276,11 +282,24 @@ Then you will get the following results:
 │   ├── 1nca_4_5.pdb
 │   ├── 1nca_original.pdb
 ```
-where the *1nca_original.pdb* is the original complex, and *1nca_a_b.pdb* means the $a$-th candiates with constraints of changing up to $b$ residues.
+where the `1nca_original.pdb` is the original complex, and `1nca_a_b.pdb` means the $a$-th candiates with constraints of changing up to $b$ residues.
 
 ### *In Silico* "Display"
 
-### Custom Optimization
+*In vitro* display are commonly used for selecting binding mutants from antibody libraries. Here we implement an *in silico* version with the **design** API by generating and filtering candidates from existing dataset against the antigen with an epitope definition. Further, we need an metric to evaluate how well the generated antibody binds to the target. Here we use FoldX as the affinity predictor. We still use the TRPV1 example in the previous section, and use the RAbD benchmark as the antibody library providing the framework regions:
+
+```bash
+python -m demos.display \
+    --ckpt checkpoints/multi_cdr_design.ckpt \
+    --pdb demos/data/7l2m.pdb \
+    --epitope_def demos/data/E_epitope.json \
+    --library ./all_data/rabd_all.json \
+    --n_sample 30 \
+    --save_dir demos/display \
+    --gpu 0
+```
+
+which will results in 30 candidates with their affinity predicted by FoldX.
 
 
 ## Contact

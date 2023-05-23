@@ -8,8 +8,8 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from data import VOCAB, E2EDataset
-from data.pdb_utils import Residue, Peptide, Protein, AgAbComplex
+from data.dataset import E2EDataset
+from data.pdb_utils import VOCAB, Residue, Peptide, Protein, AgAbComplex
 from utils.logger import print_log
 from utils.random_seed import setup_seed
 

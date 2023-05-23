@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_scatter import scatter_mean
 
-from data import VOCAB
+from data.pdb_utils import VOCAB
 from utils.nn_utils import SeparatedAminoAcidFeature, ProteinFeature
 from utils.nn_utils import GMEdgeConstructor, SeperatedCoordNormalizer
 from utils.nn_utils import _knn_edges

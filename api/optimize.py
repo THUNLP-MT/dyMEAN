@@ -10,8 +10,10 @@ import torch
 from torch.utils.data import DataLoader
 
 from generate import to_cplx
-from data.pdb_utils import VOCAB, AgAbComplex
+from data.pdb_utils import VOCAB, AgAbComplex, Protein, Peptide
 from data.dataset import _generate_chain_data
+from utils.relax import openmm_relax
+from utils.logger import print_log
 # from models.dyMEAN.predictor import Predictor
 
 
@@ -106,6 +108,7 @@ def optimize(
         num_workers=4,
         optimize_steps=10,
         cdr_type='auto',
+        enable_openmm_relax=True,
         quiet=False
     ):
     '''
@@ -172,6 +175,28 @@ def optimize(
             ori_cplx = dataset.cplx
             cplx = to_cplx(ori_cplx, x, s)
             mod_pdb = os.path.join(out_dir, f'{pdb_id}_{idx}_{num_residue_changes[idx]}.pdb')
+
+            if enable_openmm_relax:
+                print_log('Openmm relaxing...')
+                interface = cplx.get_epitope()
+                if_chain = cplx.antigen.get_chain_names()[0]
+                if_residues = [deepcopy(tup[0]) for tup in interface]
+                for i, residue in enumerate(if_residues):
+                    residue.id = (i + 1, ' ')
+                if_peptide = Peptide(if_chain, if_residues)
+                if_cplx = AgAbComplex(
+                    antigen=Protein(cplx.get_id(), {if_chain: if_peptide}),
+                    antibody=cplx.antibody,
+                    heavy_chain=cplx.heavy_chain,
+                    light_chain=cplx.light_chain
+                )
+                if_cplx.to_pdb(mod_pdb)
+                openmm_relax(mod_pdb, mod_pdb,
+                             excluded_chains=[cplx.heavy_chain, cplx.light_chain],
+                             inverse_exclude=True)
+                if_cplx = AgAbComplex.from_pdb(mod_pdb, cplx.heavy_chain, cplx.light_chain, [if_chain])
+                cplx.antibody = if_cplx.antibody
+
             cplx.to_pdb(mod_pdb)
             gen_cdr = ' '.join([cplx.get_cdr(cdr).get_seq() for cdr in cdr_type])
             ori_cdr = ' '.join([ori_cplx.get_cdr(cdr).get_seq() for cdr in cdr_type])
@@ -186,8 +211,8 @@ def optimize(
 
 
 if __name__ == '__main__':
-    ckpt = './checkpoints/affinity_opt.ckpt'
-    predictor_ckpt = './checkpoints/ddg_predictor.ckpt'
+    ckpt = './checkpoints/cdrh3_opt.ckpt'
+    predictor_ckpt = './checkpoints/cdrh3_ddg_predictor.ckpt'
     root_dir = './demos/data/1nca_opt'
     summary = ComplexSummary(
         pdb='./demos/data/1nca.pdb',

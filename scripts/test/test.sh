@@ -3,19 +3,17 @@
 ########## adjust configs according to your needs ##########
 # usually only the DATA_DIR need to be revised
 CODE_DIR=`realpath $(dirname "$0")/../..`
-DATA_DIR=/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3
-# DATA_DIR=/data/private/kxz/tmp/ab_data/IgFold
-TEST_SET=${DATA_DIR}/test.json
 NUM_WORKERS=8
 BATCH_SIZE=32
 GPU="${GPU:-0}"  # using GPU 0 by default
 CKPT=$1
-SAVE_DIR="${2:-"$(dirname "$CKPT")/results"}"  # save to the same directory as the checkpoint by default
+TEST_SET=$2
+SAVE_DIR="${3:-"$(dirname "$CKPT")/results"}"  # save to the same directory as the checkpoint by default
 ######### end of adjust ##########
 
 # validity check
 if [ -z "$CKPT" ]; then
-	echo "Usage: bash $0 <checkpoint> [save_dir]"
+	echo "Usage: bash $0 <checkpoint> <test set> [save_dir]"
 	exit 1;
 else
 	CKPT=`realpath $CKPT`

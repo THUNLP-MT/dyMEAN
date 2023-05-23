@@ -3,7 +3,6 @@
 ########## adjust configs according to your needs ##########
 # usually only the DATA_DIR need to be revised
 CODE_DIR=`realpath $(dirname "$0")/../..`
-# DATA_DIR=${CODE_DIR}/all_data/SKEMPI
 DATA_DIR=/data/private/kxz/antibody/AbTrans/SKEMPI_11_12
 TEST_SET=${DATA_DIR}/test.json
 NUM_SAMPLE=100
@@ -11,14 +10,15 @@ BATCH_SIZE=8
 GPU="${GPU:-0}"  # using GPU 0 by default
 CKPT=$1
 PREDICTOR_CKPT=$2
-NUM_CHANGE="${3:-0}" # default is 0 (no restriction)
-OPT_STEP="${4:-10}"  # default is 10
-SAVE_DIR="${5:-"$(dirname "$CKPT")/opt_results_${NUM_CHANGE}_${OPT_STEP}"}"
+TEST_SET=$3
+NUM_CHANGE="${4:-0}" # default is 0 (no restriction)
+OPT_STEP="${5:-10}"  # default is 10
+SAVE_DIR="${6:-"$(dirname "$CKPT")/opt_results_${NUM_CHANGE}_${OPT_STEP}"}"
 ######### end of adjust ##########
 
 # validity check
 if [ -z "$CKPT" ] || [ -z "$PREDICTOR_CKPT" ]; then
-	echo "Usage: bash $0 <checkpoint> <predictor checkpoint> [num_change] [opt_step] [save_dir]"
+	echo "Usage: bash $0 <checkpoint> <predictor checkpoint> <test set> [num_change] [opt_step] [save_dir]"
 	exit 1;
 else
 	CKPT=`realpath $CKPT`

@@ -9,7 +9,7 @@ from tqdm.contrib.concurrent import process_map
 
 import numpy as np
 
-from data import AgAbComplex
+from data.pdb_utils import AgAbComplex
 from evaluation.rmsd import compute_rmsd
 from evaluation.tm_score import tm_score
 from evaluation.lddt import lddt
@@ -111,7 +111,7 @@ def cal_metrics(inputs):
     assert len(gt_x) == len(pred_x), f'coordinates length conflict'
     gt_x, pred_x = np.array(gt_x), np.array(pred_x)
     results['RMSD(CA) aligned'] = compute_rmsd(gt_x, pred_x, aligned=False)
-    results['RMSD(CA)'] = compute_rmsd(gt_x, pred_x, aligned=True)
+    # results['RMSD(CA)'] = compute_rmsd(gt_x, pred_x, aligned=True)
     if cdr_type is not None:
         for cdr in cdr_type:
             gt_cdr, pred_cdr = ref_cplx.get_cdr(cdr), mod_cplx.get_cdr(cdr)

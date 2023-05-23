@@ -213,7 +213,7 @@ def main(args, dataset):
 
 
 if __name__ == '__main__':
-    from data import E2EDataset
+    from data.dataset import E2EDataset
     args = parse()
     dataset = E2EDataset(args.dataset)
     main(args, dataset)

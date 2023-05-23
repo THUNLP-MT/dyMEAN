@@ -378,20 +378,14 @@ def format_aa_abrv(abrv):  # special cases
 
 
 class Residue:
-    def __init__(self, symbol: str, coordinate: Dict, _id: Tuple, sidechain: List=None):
+    def __init__(self, symbol: str, coordinate: Dict, _id: Tuple):
         self.symbol = symbol
         self.coordinate = coordinate
-        if sidechain is None:
-            self.sidechain = VOCAB.get_sidechain_info(symbol)
-        else:
-            self.sidechain = sidechain
+        self.sidechain = VOCAB.get_sidechain_info(symbol)
         self.id = _id  # (residue_number, insert_code)
 
     def get_symbol(self):
         return self.symbol
-
-    def get_ca_pos(self):
-        return self.get_coord('CA')
 
     def get_coord(self, atom_name):
         return copy(self.coordinate[atom_name])
@@ -549,19 +543,14 @@ class Protein:
                 if hetero_flag != ' ':
                     continue   # residue from glucose or water
                 symbol = VOCAB.abrv_to_symbol(abrv)
-                # if symbol is None:
-                #     has_non_residue = True
-                #     # print(f'has non residue: {abrv}')
-                #     break
-                if symbol is None:  # UNKNOWN, maybe DNA / modified aa etc.
-                    symbol = VOCAB.MASK
-                    sidechain = [atom.get_id() for atom in residue if atom.get_id() not in VOCAB.backbone_atoms]
-                else:
-                    sidechain = None
+                if symbol is None:
+                    has_non_residue = True
+                    # print(f'has non residue: {abrv}')
+                    break
                 # filter Hs because not all data include them
                 atoms = { atom.get_id(): atom.get_coord() for atom in residue if atom.element != 'H' }
                 residues.append(Residue(
-                    symbol, atoms, (res_number, insert_code), sidechain
+                    symbol, atoms, (res_number, insert_code)
                 ))
             if has_non_residue or len(residues) == 0:  # not a peptide
                 continue
@@ -910,114 +899,6 @@ class AgAbComplex:
 
         sep = '\n' + '=' * 20 + '\n'
         return sep + pdb_info + '\n' + antibody_info + '\n' + cdr_info + '\n' + antigen_info + '\n' + epitope_info + sep
-
-
-# General complex
-class Complex(Protein):
-    def __init__(self, pdb_id, peptides, receptor_chains=None, ligand_chains=None):
-        super().__init__(pdb_id, peptides)
-        assert not (receptor_chains is None and ligand_chains is None), 'At least one of receptor_chains or ligand_chains should be provided'
-        if type(receptor_chains) == str:
-            receptor_chains = list(receptor_chains)
-        if type(ligand_chains) == str:
-            ligand_chains = list(ligand_chains)
-        if receptor_chains is None:
-            self.ligand_chains = ligand_chains
-            self.receptor_chains = [chain for chain in self.peptides if chain not in self.ligand_chains]
-        elif ligand_chains is None:
-            self.receptor_chains = receptor_chains
-            self.ligand_chains = [chain for chain in self.peptides if chain not in self.receptor_chains]
-        else:
-            self.receptor_chains = receptor_chains
-            self.ligand_chains = ligand_chains
-        self.interface = None
-        self.interface_dist = 0
-
-    @classmethod
-    def from_pdb(cls, pdb_path, receptor_chains=None, ligand_chains=None):
-        prot = Protein.from_pdb(pdb_path)
-        return cls(prot.pdb_id, prot.peptides, receptor_chains, ligand_chains)
-
-    def get_interacting_residues(self, dist_th=6.6):
-        '''
-        calculate interacting residues based on minimum distance between heavy atoms < 10A
-        '''
-        if dist_th == self.interface_dist and self.interface is not None:
-            return deepcopy(self.interface)
-
-        rec_residues, lig_residues = [], []
-        rec_res_id, lig_res_id = [], []
-        for res_list, res_id_list, chains in zip([rec_residues, lig_residues], [rec_res_id, lig_res_id], [self.receptor_chains, self.ligand_chains]):
-            for chain in chains:
-                for i, residue in enumerate(self.peptides[chain]):
-                    res_list.append(residue)
-                    res_id_list.append((chain, i))
-        
-        # calculate distance
-        dist = dist_matrix_from_residues(rec_residues, lig_residues)  # [Nrec, Nlig]
-        is_interacting = dist < dist_th
-        rec_index = np.nonzero(is_interacting.sum(axis=1) > 0)[0]
-        lig_index = np.nonzero(is_interacting.sum(axis=0) > 0)[0]
-
-        rec_inter = [rec_residues[i] for i in rec_index]
-        lig_inter = [lig_residues[i] for i in lig_index]
-        rec_id = [rec_res_id[i] for i in rec_index]
-        lig_id = [lig_res_id[i] for i in lig_index]
-
-        self.interface = (rec_id, rec_inter, lig_id, lig_inter)
-        self.interface_dist = dist_th
-
-        return rec_id, rec_inter, lig_id, lig_inter
-
-    def __str__(self):
-        pdb_info = f'PDB ID: {self.pdb_id}'
-        ligand_info = f'Ligand Chain: {[(chain_name, len(chain)) for chain_name, chain in self.ligand]}'
-        receptor_info = f'Receptor Chains: {[(chain_name, len(chain)) for chain_name, chain in self.receptor]}'
-        epitope_info = f'Epitope: \n'
-        residue_map = {}
-        for _, chain_name, i in self.get_epitope():
-            if chain_name not in residue_map:
-                residue_map[chain_name] = []
-            residue_map[chain_name].append(i)
-        for chain_name in residue_map:
-            epitope_info += f'\t{chain_name}: {sorted(residue_map[chain_name])}\n'
-
-        sep = '\n' + '=' * 20 + '\n'
-        return sep + pdb_info + '\n' + ligand_info + '\n' + receptor_info + '\n' + epitope_info + sep
-
-
-def coords_from_residues(residue_list):
-    coords, masks = [], []
-    for residue in residue_list:
-        x, mask = [], []
-        for atom in VOCAB.backbone_atoms + residue.sidechain:
-            if atom in residue.coordinate:
-                x.append(residue.coordinate[atom])
-                mask.append(1)
-            else:
-                x.append([0, 0, 0])
-                mask.append(0)
-
-        num_pad = VOCAB.MAX_ATOM_NUMBER - len(x)
-        x = x + [[0, 0, 0] for _ in range(num_pad)]
-        mask = mask + [0 for _ in range(num_pad)]
-        coords.append(x)
-        masks.append(mask)
-    return np.array(coords), np.array(masks).astype('bool')  # [N, M, 3], [N, M], M == MAX_ATOM_NUM, in mask 0 for padding
-
-
-def dist_matrix_from_coords(coords1, masks1, coords2, masks2):
-    dist = np.linalg.norm(coords1[:, None] - coords2[None, :], axis=-1)  # [N1, N2, M]
-    dist = dist + np.logical_not(masks1[:, None] * masks2[None, :]) * 1e6  # [N1, N2, M]
-    dist = np.min(dist, axis=-1)  # [N1, N2]
-    return dist
-
-
-def dist_matrix_from_residues(residue_list1, residue_list2):
-    coords1, masks1 = coords_from_residues(residue_list1)
-    coords2, masks2 = coords_from_residues(residue_list2)
-    return dist_matrix_from_coords(coords1, masks1, coords2, masks2)
-
 
 
 def merge_to_one_chain(protein: Protein):

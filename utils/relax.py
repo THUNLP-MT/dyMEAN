@@ -14,7 +14,7 @@ from pdbfixer import PDBFixer
 import logging
 logging.getLogger('openmm').setLevel(logging.ERROR)
 
-from data import Peptide
+from data.pdb_utils import Peptide
 from evaluation.rmsd import kabsch
 from configs import CACHE_DIR, Rosetta_DIR
 from utils.time_sign import get_time_sign

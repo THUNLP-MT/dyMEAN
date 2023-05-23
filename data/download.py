@@ -10,7 +10,7 @@ from functools import partial
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map, process_map
 
-from configs import AG_TYPES, RENUMBER, RAbD_PDB, IGFOLD_TEST_PDB, SKEMPI_PDB
+from configs import AG_TYPES, RAbD_PDB, IGFOLD_TEST_PDB, SKEMPI_PDB
 from configs import IMGT
 from .pdb_utils import Protein, AgAbComplex, Peptide
 from utils.io import read_csv
@@ -48,7 +48,7 @@ def read_sabdab(fpath, n_cpu):
     }
     for entry in entries:
         pdb = entry[head2idx['pdb']]
-        if pdb in pdb2idx:  # (non-redundant)
+        if pdb in pdb2idx:  # (redundant)
             continue
 
         # extract useful summary
@@ -164,6 +164,18 @@ def download_one_item_local(pdb_dir, item):
         file_dir = os.path.split(__file__)[0]
         with open(os.path.join(file_dir, '..', 'summaries', pdb_id + '.pdb'), 'r') as fin:
             item['pdb_data'] = fin.read()
+        if pdb_id == '3h3b':
+            item['heavy_chain'] = 'D'
+            item['light_chain'] = 'E'
+            item['antigen_chains'] = ['B']
+        elif pdb_id == '2ghw':
+            item['heavy_chain'] = 'B'
+            item['light_chain'] = 'E'
+            item['antigen_chains'] = ['A']
+        elif pdb_id == '3uzq':
+            item['heavy_chain'] = 'A'
+            item['light_chain'] = 'C'
+            item['antigen_chains'] = ['B']
         return item
 
     for pdb_id in [pdb_id.lower(), pdb_id.upper()]:
@@ -201,7 +213,7 @@ def post_process(item):
         if not item['pre_numbered']:
             exit_code = IMGT.renumber(pdb_data_path, pdb_data_path)
             if exit_code != 0:
-                print_log(f'renumbering failed for {pdb}. scheme {numbering}', level='ERROR')
+                # print_log(f'renumbering failed for {pdb}. scheme {numbering}', level='ERROR')
                 return cleanup_none(pdb_data_path)
         try:
             # clean pdb

@@ -11,7 +11,7 @@ from utils.random_seed import setup_seed, SEED
 setup_seed(SEED)
 
 ########### Import your packages below ##########
-from data import E2EDataset, VOCAB
+from data.dataset import E2EDataset, VOCAB
 from trainer import TrainConfig
 
 

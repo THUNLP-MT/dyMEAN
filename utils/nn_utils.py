@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_scatter import scatter_mean, scatter_sum
 
-from data import VOCAB
+from data.pdb_utils import VOCAB
 from evaluation.rmsd import kabsch_torch
 
 

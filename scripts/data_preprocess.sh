@@ -28,14 +28,14 @@ cd ${CODE_DIR}
 ########## SAbDab ##########
 echo "Processing SAbDab with output directory ${OUT_DIR}"
 # Note: All tasks separate subsets from SAbDab for training models
-python -m data.download \
-    --summary summaries/sabdab_summary.tsv \
-    --pdb_dir $PDB_DIR \
-    --fout $OUT_DIR/sabdab_all.json \
-    --type sabdab \
-    --numbering imgt \
-    --pre_numbered \
-    --n_cpu 4
+# python -m data.download \
+#     --summary summaries/sabdab_summary.tsv \
+#     --pdb_dir $PDB_DIR \
+#     --fout $OUT_DIR/sabdab_all.json \
+#     --type sabdab \
+#     --numbering imgt \
+#     --pre_numbered \
+#     --n_cpu 4
 
 
 ########## RAbD (CDR-H3 design) ##########
