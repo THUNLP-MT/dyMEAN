@@ -13,12 +13,12 @@ Four parts:
 PROJ_DIR = os.path.split(__file__)[0]
 RENUMBER = os.path.join(PROJ_DIR, 'utils', 'renumber.py')
 # FoldX
-FOLDX_BIN = '/data/private/kxz/dG/baselines/foldx5/foldx_20231231'
+FOLDX_BIN = './foldx5/foldx_20231231'
 # DockQ 
 # IMPORTANT: change it to your path to DockQ project)
-DOCKQ_DIR = '/data/private/kxz/antibody/DockQ'
+DOCKQ_DIR = './DockQ'
 # cache directory
-CACHE_DIR = '/data/private/kxz/tmp/__cache__'
+CACHE_DIR = os.path.join(PROJ_DIR, '__cache__')
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR)
 

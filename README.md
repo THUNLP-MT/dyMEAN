@@ -69,6 +69,7 @@ Since pdb files are heavy to process, usually people will generate a summary fil
 **(Optional) 4. Baselines**
 
 If you are interested in the pipeline baselines, including the following projects and integrate their dependencies according to your needs:
+
 - framework structure prediction:
     - [IgFold](https://github.com/Graylab/IgFold/tree/main/igfold)
 - docking:
@@ -79,6 +80,8 @@ If you are interested in the pipeline baselines, including the following project
     - [Rosetta](https://new.rosettacommons.org/demos/latest/tutorials/install_build/install_build)
 - side-chain packing:
     - [Rosetta](https://new.rosettacommons.org/demos/latest/tutorials/install_build/install_build)
+
+After adding these projects, please also remember to revise the corresponding paths in `./configs.py`. We have also provided the scripts for cascading the modules in `./scripts/pipeline_inference.sh`.
 
 
 ## Experiments
@@ -290,7 +293,7 @@ where the `1nca_original.pdb` is the original complex, and `1nca_a_b.pdb` means 
 
 ### *In Silico* "Display"
 
-*In vitro* display are commonly used for selecting binding mutants from antibody libraries. Here we implement an *in silico* version with the **design** API by generating and filtering candidates from existing dataset against the antigen with an epitope definition. Further, we need an metric to evaluate how well the generated antibody binds to the target. Here we use FoldX as the affinity predictor. We still use the TRPV1 example in the previous section, and use the RAbD benchmark as the antibody library providing the framework regions:
+*In vitro* display are commonly used for selecting binding mutants from antibody libraries. Here we implement an *in silico* version with the **design** API by generating and filtering candidates from existing dataset against the antigen with an epitope definition. Further, we need an metric to evaluate how well the generated antibody binds to the target. Here we use FoldX as the affinity predictor, so to run this demo, you may need to first download the it from the [official website](https://foldxsuite.crg.eu/products#foldx) and revise the path in `./configs.py` correspondingly. We still use the TRPV1 example in the previous section, and use the RAbD benchmark as the antibody library providing the framework regions:
 
 ```bash
 python -m demos.display \
