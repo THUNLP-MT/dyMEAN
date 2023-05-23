@@ -66,21 +66,20 @@ def opt_generate(args):
             out_dir=out_dir,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
+            enable_openmm_relax=False,  # for fast evaluation
             optimize_steps=args.num_optimize_steps
         )
 
         ori_cdr, ori_pdb, scores = item[f'cdr{cdr_type.lower()}_seq'], summary.pdb, []
-
-        # ori_pdb = foldx_minimize_energy(ori_pdb)
 
         item_log = open(os.path.join(out_dir, 'detail.txt'), 'w')
         different_cnt, cur_changes = 0, []
         for gen_pdb, gen_cdr in tqdm(zip(gen_pdbs, gen_cdrs), total=len(gen_pdbs)):
             change_cnt = 0
             if gen_cdr != ori_cdr:
-                # score = pred_ddg(ori_pdb, gen_pdb)
-                gen_pdb = openmm_relax(gen_pdb, gen_pdb)
-                gen_pdb = foldx_minimize_energy(gen_pdb)
+                score = pred_ddg(ori_pdb, gen_pdb)
+                # gen_pdb = openmm_relax(gen_pdb, gen_pdb)
+                # gen_pdb = foldx_minimize_energy(gen_pdb)
                 try:
                     score = foldx_ddg(ori_pdb, gen_pdb, summary.antigen_chains, [summary.heavy_chain, summary.light_chain])
                 except ValueError as e:

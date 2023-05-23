@@ -114,7 +114,7 @@ python -m data.framework_templates \
 ### CDR-H3 Design
 We use SAbDab for training and RAbD for testing. Please first revise the settings in `scripts/train/configs/cdr_design.json` (path to datasets and other hyperparameters) and then run the below command for training:
 ```bash
-GPU=0,1 bash scripts/train/train.sh scripts/train/configs/cdr_design.json
+GPU=0,1 bash scripts/train/train.sh scripts/train/configs/single_cdr_design.json
 ```
 Normally the training procedure takes about 7 hours on 2 GeForce RTX 2080 Ti GPUs. We have also provided the trained checkpoint at `checkpoints/cdrh3_design.ckpt`. Then please revise the path to the test set in `scripts/test/test.sh` and run the following command for testing:
 ```bash
@@ -136,7 +136,7 @@ GPU=0 bash scripts/test/test.sh ./checkpoints/struct_prediction.ckpt ./all_data/
 ### Affinity Optimization
 We use SAbDab for training and the antibodies in SKEMPI V2.0 for testing. Similarly, please first revise the settings in `scripts/train/configs/affinity_opt.json`, `scripts/test/optimize_test.sh`, and additionally `scripts/train/train_predictor.sh`. Then please conduct training of dyMEANOpt (~ 5h):
 ```bash
-GPU=0,1 bash scripts/train/train.sh scripts/train/configs/cdrh3_opt.json
+GPU=0,1 bash scripts/train/train.sh scripts/train/configs/single_cdr_opt.json
 ```
 Then we need to train a predictor of ddg on the representations of generated complex (~ 40min):
 ```bash

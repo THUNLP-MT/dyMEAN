@@ -1,7 +1,7 @@
 {
   "train_set": "./all_data/SKEMPI/train.json",
   "valid_set": "./all_data/SKEMPI/valid.json",
-  "save_dir": "./all_data/SKEMPI/models",
+  "save_dir": "./all_data/SKEMPI/models_single_cdr_opt",
   "cdr": "H3",
   "seq_warmup": 120,
   "max_epoch": 200,

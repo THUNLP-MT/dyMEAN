@@ -1,7 +1,7 @@
 {
   "train_set": "./all_data/IgFold/train.json",
   "valid_set": "./all_data/IgFold/valid.json",
-  "save_dir": "./all_data/IgFold/models",
+  "save_dir": "./all_data/IgFold/models_struct_pred",
   "max_epoch": 250,
   "save_topk": 10,
   "batch_size": 16,

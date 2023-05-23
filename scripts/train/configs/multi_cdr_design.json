@@ -1,7 +1,7 @@
 {
   "train_set": "./all_data/RAbD/train.json",
   "valid_set": "./all_data/RAbD/valid.json",
-  "save_dir": "./all_data/RAbD/models",
+  "save_dir": "./all_data/RAbD/models_multi_cdr_design",
   "cdr": "H1 H2 H3 L1 L2 L3",
   "paratope": "L3 H3",
   "max_epoch": 300,

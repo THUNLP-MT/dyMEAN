@@ -1,7 +1,7 @@
 {
-  "train_set": "/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3/train.json",
-  "valid_set": "/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3/valid.json",
-  "save_dir": "/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3/models_full",
+  "train_set": "./all_data/RAbD/train.json",
+  "valid_set": "./all_data/RAbD/valid.json",
+  "save_dir": "./all_data/RAbD/models_full",
   "max_epoch": 200,
   "save_topk": 10,
   "batch_size": 16,
