@@ -1,0 +1,16 @@
+{
+  "train_set": "/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3/train.json",
+  "valid_set": "/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3/valid.json",
+  "save_dir": "/data/private/kxz/antibody/AbTrans/RAbD_11_12/cdrh3/models_full",
+  "max_epoch": 200,
+  "save_topk": 10,
+  "batch_size": 16,
+  "shuffle": true,
+  "model_type": "dyMEAN",
+  "embed_dim": 64,
+  "hidden_size": 128,
+  "k_neighbors": 9,
+  "n_layers": 3,
+  "iter_round": 3,
+  "bind_dist_cutoff": 6.6
+}

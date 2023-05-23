@@ -1,0 +1,18 @@
+{
+  "train_set": "/data/private/kxz/tmp/ab_data/SKEMPI/train.json",
+  "valid_set": "/data/private/kxz/tmp/ab_data/SKEMPI/valid.json",
+  "save_dir": "/data/private/kxz/tmp/ab_data/SKEMPI/models",
+  "cdr": "H1 H2 H3 L1 L2 L3",
+  "seq_warmup": 120,
+  "max_epoch": 200,
+  "save_topk": 10,
+  "batch_size": 16,
+  "shuffle": true,
+  "model_type": "dyMEANOpt",
+  "embed_dim": 64,
+  "hidden_size": 128,
+  "k_neighbors": 9,
+  "n_layers": 3,
+  "iter_round": 3,
+  "bind_dist_cutoff": 6.6
+}

@@ -1,0 +1,17 @@
+{
+  "train_set": "./all_data/IgFold/train.json",
+  "valid_set": "./all_data/IgFold/valid.json",
+  "save_dir": "./all_data/IgFold/models",
+  "max_epoch": 250,
+  "save_topk": 10,
+  "batch_size": 16,
+  "shuffle": true,
+  "model_type": "dyMEAN",
+  "embed_dim": 64,
+  "hidden_size": 128,
+  "k_neighbors": 9,
+  "n_layers": 3,
+  "iter_round": 3,
+  "struct_only": true,
+  "bind_dist_cutoff": 6.6
+}

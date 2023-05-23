@@ -1,0 +1,17 @@
+{
+  "train_set": "./all_data/RAbD/train.json",
+  "valid_set": "./all_data/RAbD/valid.json",
+  "save_dir": "./all_data/RAbD/models",
+  "cdr": "H3",
+  "max_epoch": 200,
+  "save_topk": 10,
+  "batch_size": 16,
+  "shuffle": true,
+  "model_type": "dyMEAN",
+  "embed_dim": 64,
+  "hidden_size": 128,
+  "k_neighbors": 9,
+  "n_layers": 3,
+  "iter_round": 3,
+  "bind_dist_cutoff": 6.6
+}
