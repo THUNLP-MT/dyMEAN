@@ -83,11 +83,15 @@ If you are interested in the pipeline baselines, including the following project
 
 ## Experiments
 
-The trained checkpoints for each task are provided at the github release. To use them, please download the ones you are interested in into the folder `./checkpoints`:
+The trained checkpoints for each task are provided at the [github release page](https://github.com/THUNLP-MT/dyMEAN/releases/tag/v1.0.0). To use them, please download the ones you are interested in and save them into the folder `./checkpoints`. We provide the names, training configurations (under `./scripts/train/configs`), and descriptions of the checkpoints as follows:
 
-- `cdrh3_design.ckpt`: Epitope-binding CDR-H3 design.
-- `struct_prediction.ckpt`: Complex structure prediction.
-- `affinity_opt.ckpt` and `ddg_predictor.ckpt`: Affinity optimization.
+| checkpoint(s)                                | configure              | description                                    |
+| -------------------------------------------- | ---------------------- | ---------------------------------------------- |
+| cdrh3_design.ckpt                            | single_cdr_design.json | Epitope-binding CDR-H3 design                  |
+| struct_prediction.ckpt                       | struct_prediction.json | Complex structure prediction                   |
+| affinity_opt.ckpt & ddg_predictor.ckp        | single_cdr_opt.json    | Affinity optimization on CDR-H3                |
+| multi_cdr_design.ckpt                        | multi_cdr_design.json  | Design all 6 CDRs simultaneously               |
+| multi_cdr_opt.ckpt & multi_cdr_ddg_predictor | multi_cdr_opt.json     | Optimize affinity on all 6 CDRs simultaneously |
 
 ### Data Preprocessing
 
