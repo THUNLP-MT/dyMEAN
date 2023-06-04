@@ -260,19 +260,22 @@ class dyMEANOptModel(nn.Module):
             return gen_X, gen_S, ppl, H
         return gen_X, gen_S, ppl
 
-    def optimize_sample(self, X, S, cmask, smask, residue_pos, lengths, predictor, opt_steps=10, init_noise=None):
+    def optimize_sample(self, X, S, cmask, smask, residue_pos, lengths, predictor, opt_steps=10, init_noise=None, mask_only=False):
         self._prepare_batch_constants(S, lengths)
         batch_id = self.batch_constants['batch_id']
         batch_size = self.batch_constants['batch_size']
+        opt_mask = smask if mask_only else cmask
         # noise_batch_id = batch_id[smask].unsqueeze(1).repeat(1, X.shape[1] * X.shape[2]).flatten()
-        noise_batch_id = batch_id[cmask].unsqueeze(1).repeat(1, X.shape[1] * X.shape[2]).flatten()
+        # noise_batch_id = batch_id[cmask].unsqueeze(1).repeat(1, X.shape[1] * X.shape[2]).flatten()
+        noise_batch_id = batch_id[opt_mask].unsqueeze(1).repeat(1, X.shape[1] * X.shape[2]).flatten()
 
         final_X, final_S = X.clone(), S.clone()
         best_metric = torch.ones(batch_size, dtype=torch.float, device=X.device) * 1e10
 
         all_noise = torch.randn_like(X, requires_grad=False)
         # init_noise = torch.randn_like(X[smask], requires_grad=True)
-        init_noise = torch.randn_like(X[cmask], requires_grad=True)
+        # init_noise = torch.randn_like(X[cmask], requires_grad=True)
+        init_noise = torch.randn_like(X[opt_mask], requires_grad=True)
         optimizer = torch.optim.Adam([init_noise], lr=1.0)
         optimizer.zero_grad()
         
@@ -280,7 +283,8 @@ class dyMEANOptModel(nn.Module):
             all_noise = all_noise.detach()
             X, S, cmask, smask, residue_pos, lengths = X.clone(), S.clone(), cmask.clone(), smask.clone(), residue_pos.clone(), lengths.clone()
             # all_noise[smask] = init_noise
-            all_noise[cmask] = init_noise
+            # all_noise[cmask] = init_noise
+            all_noise[opt_mask] = init_noise
             gen_X, gen_S, _, H = self.sample(X, S, cmask, smask, residue_pos, lengths, return_hidden=True, init_noise=all_noise[cmask])
             h = scatter_mean(H, batch_id, dim=0)
             pmetric = predictor.inference(h)

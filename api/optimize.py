@@ -154,7 +154,7 @@ def optimize(
             if hasattr(batch[k], 'to'):
                 batch[k] = batch[k].to(device)
         # generate
-        X, S, pmets = model.optimize_sample(**batch, predictor=predictor, opt_steps=optimize_steps)
+        X, S, pmets = model.optimize_sample(**batch, predictor=predictor, opt_steps=optimize_steps, mask_only=True)
         X, S, pmets = X.tolist(), S.tolist(), pmets.tolist()
         X_list, S_list = [], []
         cur_bid = -1
@@ -172,32 +172,38 @@ def optimize(
             S_list[-1].append(S[i])
                 
         for i, (x, s) in enumerate(zip(X_list, S_list)):
-            ori_cplx = dataset.cplx
+            ori_cplx = deepcopy(dataset.cplx)
             cplx = to_cplx(ori_cplx, x, s)
             mod_pdb = os.path.join(out_dir, f'{pdb_id}_{idx}_{num_residue_changes[idx]}.pdb')
 
+            cplx.to_pdb(mod_pdb)
             if enable_openmm_relax:
                 print_log('Openmm relaxing...')
-                interface = cplx.get_epitope()
-                if_chain = cplx.antigen.get_chain_names()[0]
-                if_residues = [deepcopy(tup[0]) for tup in interface]
-                for i, residue in enumerate(if_residues):
-                    residue.id = (i + 1, ' ')
-                if_peptide = Peptide(if_chain, if_residues)
-                if_cplx = AgAbComplex(
-                    antigen=Protein(cplx.get_id(), {if_chain: if_peptide}),
-                    antibody=cplx.antibody,
-                    heavy_chain=cplx.heavy_chain,
-                    light_chain=cplx.light_chain
-                )
-                if_cplx.to_pdb(mod_pdb)
+                # interface = cplx.get_epitope()
+                # if_chain = cplx.antigen.get_chain_names()[0]
+                # if_residues = [deepcopy(tup[0]) for tup in interface]
+                # for i, residue in enumerate(if_residues):
+                #     residue.id = (i + 1, ' ')
+                # if_peptide = Peptide(if_chain, if_residues)
+                #     
+                # if_cplx = AgAbComplex(
+                #     antigen=Protein(cplx.get_id(), {if_chain: if_peptide}),
+                #     # antigen=Protein(cplx.get_id(), if_peptides),
+                #     antibody=cplx.antibody,
+                #     heavy_chain=cplx.heavy_chain,
+                #     light_chain=cplx.light_chain
+                # )
+
+
+                # if_cplx.to_pdb(mod_pdb)
                 openmm_relax(mod_pdb, mod_pdb,
                              excluded_chains=[cplx.heavy_chain, cplx.light_chain],
                              inverse_exclude=True)
-                if_cplx = AgAbComplex.from_pdb(mod_pdb, cplx.heavy_chain, cplx.light_chain, [if_chain])
-                cplx.antibody = if_cplx.antibody
+                # if_cplx = AgAbComplex.from_pdb(mod_pdb, cplx.heavy_chain, cplx.light_chain, [if_chain])
+                # cplx.antibody = if_cplx.antibody
+                cplx = AgAbComplex.from_pdb(mod_pdb, cplx.heavy_chain, cplx.light_chain, cplx.antigen.get_chain_names())
 
-            cplx.to_pdb(mod_pdb)
+            # cplx.to_pdb(mod_pdb)
             gen_cdr = ' '.join([cplx.get_cdr(cdr).get_seq() for cdr in cdr_type])
             ori_cdr = ' '.join([ori_cplx.get_cdr(cdr).get_seq() for cdr in cdr_type])
             gen_pdbs.append(mod_pdb)
