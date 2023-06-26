@@ -39,7 +39,7 @@ The source code for assessing TMscore is at `evaluation/TMscore.cpp`. Please com
 g++ -static -O3 -ffast-math -lm -o evaluation/TMscore evaluation/TMscore.cpp
 ```
 
-To prepare the DockQ scorer, please clone its [official github](https://github.com/bjornwallner/DockQ). After that, please revise the `DOCKQ_DIR` variable in the `configs.py` to point to the directory containing the DockQ project (e.g. ./DockQ).
+To prepare the DockQ scorer, please clone its [official github](https://github.com/bjornwallner/DockQ) and compile the prerequisites according to its instructions. After that, please revise the `DOCKQ_DIR` variable in the `configs.py` to point to the directory containing the DockQ project (e.g. ./DockQ).
 
 The lDDT scorer is in the conda environment, and the $\Delta\Delta G$ scorer is integrated into our codes, therefore they don't need additional preparations.
 
