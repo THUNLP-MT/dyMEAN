@@ -31,6 +31,9 @@ def fetch_from_pdb(identifier, tries=5):
     url = f'https://files.rcsb.org/download/{identifier}.pdb'
 
     text = url_get(url, tries)
+    if text is None:
+        return None
+
     data = res.json()
     data['pdb'] = text.text
     return data
