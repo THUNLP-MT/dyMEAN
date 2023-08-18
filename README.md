@@ -340,7 +340,7 @@ Then you will get the following results:
 │   ├── 1nca_model_2.pdb
 │   ├── ...
 ```
-where there should be a total of 10 sampled conformations.
+where there should be a total of 10 sampled conformations. Note that the first or last few residues might be discarded in the results if they are out of the variable domain according to the IMGT numbering system.
 
 
 ### *In Silico* "Display"
