@@ -291,6 +291,58 @@ Then you will get the following results:
 ```
 where the `1nca_original.pdb` is the original complex, and `1nca_a_b.pdb` means the $a$-th candiates with constraints of changing up to $b$ residues.
 
+#### Complex Structure Prediction
+
+The **complex structure prediction** API (`./api/structure_prediction.py`) predicts the complex structure given the antigen, the sequences of the heavy chain and the light chain, and the definition of the epitope. Global docking is still very challenging so we narrow the scope to the epitope of interest. We predict`./demos/data/1nca.pdb` as an example:
+
+```python
+
+from api.structure_prediction import structure_prediction
+
+ckpt = './checkpoints/struct_prediction.ckpt'
+root_dir = './demos/data'
+n_sample = 10  # sample 10 conformations
+pdbs = [os.path.join(root_dir, '1nca_antigen.pdb') for _ in range(n_sample)]
+epitope_defs = [os.path.join(root_dir, '1nca_epitope.json') for _ in range(n_sample)]
+identifiers = [f'1nca_model_{i}' for i in range(n_sample)]
+
+seqs = [
+    (
+        ('H', 'QIQLVQSGPELKKPGETVKISCKASGYTFTNYGMNWVKQAPGKGLKWMGWINTNTGEPTYGEEFKGRFAFSLETSASTANLQINNLKNEDTATFFCARGEDNFGSLSDYWGQGTTVTVSS'),
+        ('L', 'DIVMTQSPKFMSTSVGDRVTITCKASQDVSTAVVWYQQKPGQSPKLLIYWASTRHIGVPDRFAGSGSGTDYTLTISSVQAEDLALYYCQQHYSPPWTFGGGTKLEIK')
+    ) \
+    for _ in pdbs
+]  # the first item of each tuple is heavy chain, the second is light chain
+
+structure_prediction(
+    ckpt=ckpt,  # path to the checkpoint of the trained model
+    gpu=0,      # the ID of the GPU to use
+    pdbs=pdbs,  # paths to the PDB file of each antigen (here antigen is all TRPV1)
+    epitope_defs=epitope_defs,  # paths to the epitope definitions
+    seqs=seqs,      # the given sequences of the framework regions
+    out_dir=root_dir,           # output directory
+    identifiers=identifiers,    # name of each output antibody
+    enable_openmm_relax=True)   # use openmm to relax the generated structure
+
+```
+
+Codes for this example is also added to `./api/structure_prediction.py`, so you can directly run them by:
+
+```bash
+python -m api.structure_prediction
+```
+
+Then you will get the following results:
+```
+├── demos/data
+│   ├── 1nca_model_0.pdb
+│   ├── 1nca_model_1.pdb
+│   ├── 1nca_model_2.pdb
+│   ├── ...
+```
+where there should be a total of 10 sampled conformations.
+
+
 ### *In Silico* "Display"
 
 *In vitro* display are commonly used for selecting binding mutants from antibody libraries. Here we implement an *in silico* version with the **design** API by generating and filtering candidates from existing dataset against the antigen with an epitope definition. Further, we need an metric to evaluate how well the generated antibody binds to the target. Here we use FoldX as the affinity predictor, so to run this demo, you may need to first download the it from the [official website](https://foldxsuite.crg.eu/products#foldx) and revise the path in `./configs.py` correspondingly. We still use the TRPV1 example in the previous section, and use the RAbD benchmark as the antibody library providing the framework regions:
