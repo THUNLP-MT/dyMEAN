@@ -95,6 +95,7 @@ The trained checkpoints for each task are provided at the [github release page](
 | affinity_opt.ckpt & ddg_predictor.ckp        | single_cdr_opt.json    | Affinity optimization on CDR-H3                |
 | multi_cdr_design.ckpt                        | multi_cdr_design.json  | Design all 6 CDRs simultaneously               |
 | multi_cdr_opt.ckpt & multi_cdr_ddg_predictor | multi_cdr_opt.json     | Optimize affinity on all 6 CDRs simultaneously |
+| full_design.ckpt                             | full_design.json       | Design the entire variable domain, including the framework region |
 
 ### Data Preprocessing
 
