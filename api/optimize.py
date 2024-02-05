@@ -109,6 +109,7 @@ def optimize(
         optimize_steps=10,
         cdr_type='auto',
         enable_openmm_relax=True,
+        mask_only=True,
         quiet=False
     ):
     '''
@@ -154,7 +155,7 @@ def optimize(
             if hasattr(batch[k], 'to'):
                 batch[k] = batch[k].to(device)
         # generate
-        X, S, pmets = model.optimize_sample(**batch, predictor=predictor, opt_steps=optimize_steps, mask_only=True)
+        X, S, pmets = model.optimize_sample(**batch, predictor=predictor, opt_steps=optimize_steps, mask_only=mask_only)
         X, S, pmets = X.tolist(), S.tolist(), pmets.tolist()
         X_list, S_list = [], []
         cur_bid = -1

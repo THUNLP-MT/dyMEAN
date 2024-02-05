@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 '''
-Generate dataset with (h, affinity) to train a predictor
+generate optimized candidates
 '''
 import os
 import json
@@ -67,7 +67,8 @@ def opt_generate(args):
             batch_size=args.batch_size,
             num_workers=args.num_workers,
             enable_openmm_relax=False,  # for fast evaluation
-            optimize_steps=args.num_optimize_steps
+            optimize_steps=args.num_optimize_steps,
+            mask_only=args.use_foldx
         )
 
         ori_cdr, ori_pdb, scores = item[f'cdr{cdr_type.lower()}_seq'], summary.pdb, []
@@ -77,14 +78,16 @@ def opt_generate(args):
         for gen_pdb, gen_cdr in tqdm(zip(gen_pdbs, gen_cdrs), total=len(gen_pdbs)):
             change_cnt = 0
             if gen_cdr != ori_cdr:
-                score = pred_ddg(ori_pdb, gen_pdb)
-                # gen_pdb = openmm_relax(gen_pdb, gen_pdb)
-                # gen_pdb = foldx_minimize_energy(gen_pdb)
-                try:
-                    score = foldx_ddg(ori_pdb, gen_pdb, summary.antigen_chains, [summary.heavy_chain, summary.light_chain])
-                except ValueError as e:
-                    print(e)
-                    score = 0
+                if args.use_foldx:
+                    gen_pdb = openmm_relax(gen_pdb, gen_pdb)
+                    gen_pdb = foldx_minimize_energy(gen_pdb)
+                    try:
+                        score = foldx_ddg(ori_pdb, gen_pdb, summary.antigen_chains, [summary.heavy_chain, summary.light_chain])
+                    except ValueError as e:
+                        print(e)
+                        score = 0
+                else:
+                    score = pred_ddg(ori_pdb, gen_pdb)
                 # inputs.append((gen_pdb, summary, ori_dg, interface))
                 different_cnt += 1
                 for a, b in zip(gen_cdr, ori_cdr):
@@ -124,6 +127,7 @@ def parse():
     parser = argparse.ArgumentParser(description='Optimize antibody')
     parser.add_argument('--ckpt', type=str, required=True, help='Path to checkpoint')
     parser.add_argument('--predictor_ckpt', type=str, required=True, help='Path to predictor checkpoint')
+    parser.add_argument('--use_foldx', action='store_true', help='Use foldx to predict ddg')
     parser.add_argument('--cdr_type', type=str, default='H3', help='The type of CDR to optimize (only support single CDR)')
 
     parser.add_argument('--n_samples', type=int, default=100, help='Number of samples to generate')
