@@ -20,6 +20,36 @@ from utils.logger import print_log
 from configs import IMGT
 
 
+def random_assignment(X, a, b, c):
+    # Initialize counts for each set
+    count_a = 0
+    count_b = 0
+    count_c = 0
+    
+    # Initialize assignments
+    assignments = []
+    
+    # Generate random assignments until total count is X
+    while len(assignments) < X:
+        # Randomly select a set to assign the object
+        set_idx = np.random.choice(3)
+        
+        # If the set is 'a' and the count is less than the limit, assign an object
+        if set_idx == 0 and count_a < a:
+            count_a += 1
+            assignments.append(1)
+        # If the set is 'b' and the count is less than the limit, assign an object
+        elif set_idx == 1 and count_b < b:
+            count_b += 1
+            assignments.append(2)
+        # If the set is 'c' and the count is less than the limit, assign an object
+        elif set_idx == 2 and count_c < c:
+            count_c += 1
+            assignments.append(3)
+    
+    return assignments
+
+
 def random_pos_number_imgt(seq):
     length = len(seq)
     min_len, max_len = 0, IMGT.HFR4[1]
@@ -27,9 +57,15 @@ def random_pos_number_imgt(seq):
         min_len += r - l + 1
     min_len += 3 * 5  # each CDR has at least 5 residues (this is just by experience)
     assert length >= min_len and length <= max_len, f'Length {length} not within reasonble range [{min_len}, {max_len}]'
-    cdr1 = 5 + np.random.randint(0, min(length - min_len, IMGT.H1[1] - IMGT.H1[0] - 5 + 1) + 1)
-    cdr2 = 5 + np.random.randint(0, min(length - min_len - (cdr1 - 5), IMGT.H2[1] - IMGT.H2[0] - 5 + 1) + 1)
-    cdr3 = 5 + length - min_len - (cdr2 - 5) - (cdr1 - 5)
+    cdr_additional_assignment = random_assignment(
+        length - min_len,
+        IMGT.H1[1] - IMGT.H1[0] - 5 + 1,
+        IMGT.H2[1] - IMGT.H2[0] - 5 + 1,
+        IMGT.H3[1] - IMGT.H3[0] - 5 + 1,
+    )
+    cdr1 = 5 + cdr_additional_assignment.count(1)
+    cdr2 = 5 + cdr_additional_assignment.count(2)
+    cdr3 = 5 + cdr_additional_assignment.count(3)
     def _pos_arange(tup):
         return [i for i in range(tup[0], tup[1] + 1)]
     pos = _pos_arange(IMGT.HFR1) + \
