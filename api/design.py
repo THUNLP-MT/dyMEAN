@@ -20,6 +20,34 @@ from utils.logger import print_log
 from configs import IMGT
 
 
+def random_pos_number_imgt(seq):
+    length = len(seq)
+    min_len, max_len = 0, IMGT.HFR4[1]
+    for l, r in [IMGT.HFR1, IMGT.HFR2, IMGT.HFR3, IMGT.HFR4]:
+        min_len += r - l + 1
+    min_len += 3 * 5  # each CDR has at least 5 residues (this is just by experience)
+    assert length >= min_len and length <= max_len, f'Length {length} not within reasonble range [{min_len}, {max_len}]'
+    cdr1 = 5 + np.random.randint(0, min(length - min_len, IMGT.H1[1] - IMGT.H1[0] - 5 + 1) + 1)
+    cdr2 = 5 + np.random.randint(0, min(length - min_len - (cdr1 - 5), IMGT.H2[1] - IMGT.H2[0] - 5 + 1) + 1)
+    cdr3 = 5 + length - min_len - (cdr2 - 5) - (cdr1 - 5)
+    def _pos_arange(tup):
+        return [i for i in range(tup[0], tup[1] + 1)]
+    pos = _pos_arange(IMGT.HFR1) + \
+          sorted(np.random.choice(_pos_arange(IMGT.H1), size=cdr1, replace=False).tolist()) + \
+          _pos_arange(IMGT.HFR2) + \
+          sorted(np.random.choice(_pos_arange(IMGT.H2), size=cdr2, replace=False).tolist()) + \
+          _pos_arange(IMGT.HFR3) + \
+          sorted(np.random.choice(_pos_arange(IMGT.H3), size=cdr3, replace=False).tolist()) + \
+          _pos_arange(IMGT.HFR4)
+    pos = [(p, ' ') for p in pos]
+    seq = [aa for aa in seq]
+    for i, (p, _) in enumerate(pos):
+        if p in IMGT.Hconserve:
+            seq[i] = VOCAB.abrv_to_symbol(IMGT.Hconserve[p][0])
+    seq = ''.join(seq)
+    return seq, pos
+
+
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, pdbs, epitopes, frameworks, remove_chains=None,
                  cdr='H3', paratope='H3', auto_detect_cdrs=False) -> None:
@@ -29,6 +57,7 @@ class Dataset(torch.utils.data.Dataset):
         self.frameworks = frameworks
         self.remove_chains = remove_chains
         self.cdr = [cdr] if type(cdr) == str else cdr
+        self.full_design = cdr is None
         self.paratope = [paratope] if type(paratope) == str else paratope
         self.auto_detect_cdrs = auto_detect_cdrs
 
@@ -61,24 +90,30 @@ class Dataset(torch.utils.data.Dataset):
         seq = [VOCAB.idx_to_symbol(np.random.randint(0, VOCAB.get_num_amino_acid_type())) \
                if s == '-' else s for s in chain_seq]
         seq = ''.join(seq)
-        fv, position, chain_type = renumber_seq(seq, scheme='imgt')
-        start = seq.index(fv)
-        end = start + len(fv)
-        assert start != -1, f'fv not found for {chain_seq}'
-        smask = smask[start:end]
-        seq = seq[start:end]
+        if self.full_design:
+            seq, position = random_pos_number_imgt(seq)
+        else:
+            fv, position, chain_type = renumber_seq(seq, scheme='imgt')
+            start = seq.index(fv)
+            end = start + len(fv)
+            assert start != -1, f'fv not found for {chain_seq}'
+            smask = smask[start:end]
+            seq = seq[start:end]
         residues = []
         fake_coords = { atom: [0, 0, 0] for atom in VOCAB.backbone_atoms }
         for s, pos in zip(seq, position):
             residues.append(Residue(s, fake_coords, pos))
         if self.auto_detect_cdrs:
-            for cdr in self.cdr:
-                if not cdr.startswith(chain_type):
-                    continue
-                start, end = getattr(IMGT, cdr)
-                for i, (pos_num, _) in enumerate(position):
-                    if pos_num >= start and pos_num <= end:
-                        smask[i] = 1
+            if self.full_design:
+                smask = [1 for _ in smask]
+            else:
+                for cdr in self.cdr:
+                    if not cdr.startswith(chain_type):
+                        continue
+                    start, end = getattr(IMGT, cdr)
+                    for i, (pos_num, _) in enumerate(position):
+                        if pos_num >= start and pos_num <= end:
+                            smask[i] = 1
         return residues, smask
 
     def __getitem__(self, idx):
@@ -103,7 +138,7 @@ class Dataset(torch.utils.data.Dataset):
             antigen=antigen,
             antibody=Protein('', {h_id: Peptide(h_id, hc_residues), l_id: Peptide(l_id, lc_residues)}),
             heavy_chain=h_id, light_chain=l_id, numbering='imgt',
-            skip_epitope_cal=True
+            skip_epitope_cal=True,
         )
 
         paratope_mask = [0 for _ in range(len(epitope_data['S']) + len(hc_data['S']) + len(lc_data['S']))]

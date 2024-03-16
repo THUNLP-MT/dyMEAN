@@ -240,7 +240,7 @@ These codes are also added as an example in `./api/design.py`, so you can direct
 python -m api.design
 ```
 
-Here we use "-" to mark the CDR-H3 manually, but you can also set `auto_detect_cdrs=True` to let the CDR be automatically decided by the IMGT numbering system. The types of the CDRs to design will be automatically derived from the given checkpoint. Currently the API only support re-designing single or multiple CDRs.
+Here we use "-" to mark the CDR-H3 manually, but you can also set `auto_detect_cdrs=True` to let the CDR be automatically decided by the IMGT numbering system. The types of the CDRs to design will be automatically derived from the given checkpoint. Currently the API support re-designing single or multiple CDRs, as well as designing the full antibody (by passing `"-" * length` as the input).
 
 Enabling Openmm relax will slow down the generation process a lot, but will rectify the bond lengths and angles to conform to the physical constraints.
 
