@@ -52,8 +52,8 @@ def _align_(mod_chain: Peptide, ref_chain: Peptide):
 
 def openmm_relax(pdb, out_pdb=None, excluded_chains=None, inverse_exclude=False):
 
-    # tolerance = 2.39 * kilocalories_per_mole
-    tolerance = 2.39
+    tolerance = 2.39 * kilocalories_per_mole
+    # tolerance = 2.39
     stiffness = 10.0 * kilocalories_per_mole / (angstroms ** 2)
 
     if excluded_chains is None:
